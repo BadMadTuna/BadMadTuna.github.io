@@ -1,29 +1,42 @@
 window.addEventListener('load', function() {
     const imageContainer = document.getElementById('image-container');
-    const imageFolder = 'images/'; // Replace with the path to your image folder
+    const imageFolder = 'images/'; // Folder with images in the same directory
 
-    fetchImages(imageFolder);
+    displayImages(imageFolder);
 
-    function fetchImages(folderPath) {
-        fetch(folderPath)
-            .then(response => response.text())
-            .then(data => {
-                const parser = new DOMParser();
-                const htmlDocument = parser.parseFromString(data, 'text/html');
-                const images = htmlDocument.querySelectorAll('a');
+    function displayImages(folderPath) {
+        const imgExtensions = ['jpg', 'jpeg', 'png', 'gif'];
 
-                images.forEach(image => {
-                    const imageSrc = image.getAttribute('href');
-                    if (/\.(jpe?g|png|gif)$/i.test(imageSrc)) {
-                        const imgElement = document.createElement('img');
-                        imgElement.src = folderPath + imageSrc;
-                        imgElement.alt = imageSrc;
-                        imageContainer.appendChild(imgElement);
+        for (let i = 1; ; i++) {
+            let found = false;
+            for (const ext of imgExtensions) {
+                const imageSrc = `${folderPath}image${i}.${ext}`;
+                const imgElement = document.createElement('img');
+                imgElement.src = imageSrc;
+
+                imgElement.onerror = function() {
+                    // If the image doesn't exist, move to the next extension
+                    if (ext === imgExtensions[imgExtensions.length - 1]) {
+                        found = true;
                     }
-                });
-            })
-            .catch(error => {
-                console.error('Error fetching images:', error);
-            });
+                };
+
+                imgElement.onload = function() {
+                    // If the image exists, display it
+                    imageContainer.appendChild(imgElement);
+                    found = true;
+                };
+
+                if (found) {
+                    break;
+                }
+            }
+
+            if (!found) {
+                // No more images found, exit the loop
+                break;
+            }
+        }
     }
 });
+
